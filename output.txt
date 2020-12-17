@@ -1,0 +1,4 @@
+Generated subgraph on processor rank - 0 has edges - 744200
+Generated subgraph on processor rank - 1 has edges - 744200
+Generated subgraph on processor rank - 2 has edges - 744200
+Generated subgraph on processor rank - 3 has edges - 744200

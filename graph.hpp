@@ -8,7 +8,7 @@
 #include <stack>
 #include <utility>
 #include <climits>
-
+#include <unordered_map>
 
 #define EPSILON 10
 
@@ -20,6 +20,10 @@
  * 
 */
 
+class Vertex;
+class Edge;
+class Graph;
+class BoundingPath;
 
 class Vertex {
     public:
@@ -110,6 +114,7 @@ struct edge_weight_comparator {
 };
 
 
+
 /**
  * Graph Class
  * 
@@ -131,6 +136,13 @@ class Graph {
     // keep this sorted, fam
     std::unordered_set<int> boundary_vertices;
 
+    // EP-Index
+    //std::unordered_map<Edge*, std::vector<std::vector<Vertex*>>> bounding_paths;
+
+    // bounding paths
+    std::unordered_map<Vertex*, std::unordered_map<Vertex*, std::vector<Vertex*> > > bounding_paths;
+    std::vector<std::vector<Vertex*> > bp;
+
     // default constructor
     Graph() {};
 
@@ -140,16 +152,20 @@ class Graph {
     Graph(std::vector<std::vector<int> > const&, std::vector<int> const&);
 
     std::vector<std::vector<Vertex*> > get_k_bounding_paths(Vertex*, Vertex*, int);
+
+    void initialise_bounding_paths(int);
     
     std::vector<Vertex*> get_shortest_path(Vertex*, Vertex*);
     
     std::vector<Vertex*> get_bfs_shortest_path(Vertex*, Vertex*);
     
 
-    Edge* edge(int, int);
+    Edge* get_edge(int, int);
 
     // returns true if the edge weight is updated successfully
-    bool update_edge_weight(int u, int v, int new_weight);
+    bool update_edge_weight(int u, int v, int);
+
+    bool update_edge_weight(Edge*, int);
 
     void print_neighbours(int);
 
@@ -173,12 +189,11 @@ Graph::Graph(std::vector<std::vector<int> > const& edges_param, std::vector<int>
         if(this->vertices.find(v) == this->vertices.end()) {
             this->vertices[v] = new Vertex(v);
         }
-        this->adjacency_list[this->vertices[u]][this->vertices[v]] = new Edge(this->vertices[u], this->vertices[v], w);
+        Edge* e = new Edge(this->vertices[u], this->vertices[v], w);
+        this->adjacency_list[this->vertices[u]][this->vertices[v]] = e;
+        this->edges.insert(e);
 
     }
-    //std::cout<<this->adjacency_list[this->vertices[0]][this->vertices[1362]]->destination->id<<" ";
-
-
 
     for(long int i = 0; i < (long int) boundary_vertices_param.size(); i++) {
         int u = boundary_vertices_param[i];
@@ -198,13 +213,11 @@ Graph::Graph(std::vector<std::vector<int> > const& edges_param, std::vector<int>
  * TODO:
  * Implement the given function
 */
-Edge* Graph::edge(int u, int v) {
+Edge* Graph::get_edge(int u, int v) {
     if(this->vertices.find(u) == this->vertices.end() || this->vertices.find(u) == this->vertices.end()) {
         return nullptr;
     }
-
-    //return this>adjacency_list[u][v];
-    return nullptr;
+    return this->adjacency_list[this->vertices[u]][this->vertices[v]];
 }
 
 
@@ -326,6 +339,24 @@ std::vector<std::vector<Vertex*> > Graph::get_k_bounding_paths(Vertex* source, V
     return paths;
 }
 
+
+void Graph::initialise_bounding_paths(int k) {
+    std::vector<Vertex*> vertices;
+    std::transform(this->boundary_vertices.begin(), this->boundary_vertices.end(), 
+                            std::back_inserter(vertices), 
+                            [this](const int v) {
+                                return this->vertices[v];
+                            });
+    for(int i = 0; i < vertices.size(); i++) {
+        for(int j = 0; j < vertices.size(); j++) {
+            if(i == j) {
+                continue;
+            }
+            this->bounding_paths[vertices[i]][vertices[j]] = this->get_shortest_path(vertices[i], vertices[j]);
+            this->bp.push_back(this->bounding_paths[vertices[i]][vertices[j]]);
+        }
+    }
+}
 
 /**
  * this method will return the shortest path from source to destination
@@ -479,24 +510,24 @@ std::vector<Vertex*> Graph::get_shortest_path(Vertex* source, Vertex* destinatio
 }
 
 
-bool Graph::update_edge_weight(int u, int v, int new_weight) {
-    if(this->vertices.find(u) == this->vertices.end() || this->vertices.find(v) == this->vertices.end()) {
+bool Graph::update_edge_weight(Edge* edge, int new_weight) {
+    if(edge == nullptr || edge == NULL) {
         return false;
     }
-    Vertex* uv = this->vertices[u];
-    Vertex* vv = this->vertices[v];
-    Edge* edge = this->adjacency_list[uv][vv];
-
-    // pop the edge from the set
     if(this->edges.find(edge) == this->edges.end()) {
         return false;
     }
-
     this->edges.erase(edge);
     edge->update_weight(new_weight);
     this->edges.insert(edge);
 
     return true;
+}
+
+
+bool Graph::update_edge_weight(int u, int v, int new_weight) {
+    Edge* edge = this->get_edge(u, v);
+    return update_edge_weight(edge, new_weight);
 }
 
 
@@ -517,6 +548,28 @@ void Graph::print_vertices() {
 }
 
 
+class BoundingPath {
+    public:
+    std::vector<Vertex*> path;
+    long long distance;
+    Graph* graph;
+
+    BoundingPath(std::vector<Vertex*>, Graph*);
+
+    long long update_distance();
+};
+
+
+BoundingPath::BoundingPath(std::vector<Vertex*> path, Graph* graph) {
+    this->graph = graph;
+    this->path = path;
+    
+}
+
+
+long long BoundingPath::update_distance() {
+    return this->distance;
+}
 
 
 /**
@@ -524,7 +577,7 @@ void Graph::print_vertices() {
 */
 
 // to compute the distance of the path
-// first parameter is the parth vector
+// first parameter is the path vector
 // second parameter is the graph's adjacency list
 // both passed by reference
 int path_distance(std::vector<Vertex*>& path, std::map<Vertex*, std::map<Vertex*, Edge*> >& adjacency_list) {

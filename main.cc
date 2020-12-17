@@ -3,7 +3,6 @@
 #include "graph.hpp"
 
 using namespace std;
-
 int main() {
     ios::sync_with_stdio(true);
     int n;
@@ -34,9 +33,9 @@ int main() {
     }
 
     Graph subgraph = Graph(edges, boundary_vertices);
-
+    
     cout<<"Graph generated successfully\n";
-
+    /*
     subgraph.print_neighbours(1230);
     subgraph.print_neighbours(955);
     // cout<<subgraph.vertices[0]<<" ";
@@ -61,7 +60,8 @@ int main() {
         cout<<"\n\n";
         
     }
-    
+    */
+    subgraph.initialise_bounding_paths(1);
 
     return 0;
 }
