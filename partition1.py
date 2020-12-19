@@ -6,9 +6,10 @@ import argparse
 import os
 import shutil
 import pprint
+import random
 
 
-THRESHOLD = 2000
+THRESHOLD = 800
 
 
 if __name__ == "__main__":
@@ -76,7 +77,8 @@ if __name__ == "__main__":
     discovered = deque()
     visited = [False] * n_nodes
     closed = [False] * n_nodes
-    discovered.append((0, -1))
+    root = random.randint(0, n_nodes-1)
+    discovered.append(root)
     subgraphs = []
     subgraph = []
     count = 0
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     neighbours = [set()] * n_nodes
     boundary_vertices = [False] * n_nodes
     while discovered:
-        node, parent = discovered.popleft()
+        node = discovered.popleft()
         subgraph.append(node)
         count += 1
         closed[node] = True
@@ -96,7 +98,6 @@ if __name__ == "__main__":
                     nxt = adj[1]
                     if not closed[nxt]:
                         boundary.append(v)
-                        #boundary_vertices.append(v)
                         boundary_vertices[v] = True
                         break
             subgraphs.append(list(subgraph))
@@ -107,14 +108,13 @@ if __name__ == "__main__":
             nxt = adj[1]
             if not visited[nxt]:
                 visited[nxt] = True
-                discovered.append((nxt, node))
+                discovered.append(nxt)
     if count > 0:
         boundary = []
         for v in subgraph:
             for nxt in adj_list[v]:
                 if not closed[nxt[1]]:
                     boundary.append(v)
-                    #boundary_vertices.append(v)
                     boundary_vertices[v] = True
                     break
         subgraphs.append(list(subgraph))

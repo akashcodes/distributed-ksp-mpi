@@ -61,7 +61,8 @@ int main() {
         
     }
     */
-    subgraph.initialise_bounding_paths(1);
+    cout << subgraph.boundary_vertices.size() << endl;
+    //subgraph.initialise_bounding_paths(1);
 
     return 0;
 }
