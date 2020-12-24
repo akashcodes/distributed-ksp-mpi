@@ -33,7 +33,7 @@ int main() {
     }
 
     Graph subgraph = Graph(edges, boundary_vertices);
-    
+    subgraph.initialise_bounding_paths(1);
     cout<<"Graph generated successfully\n";
     /*
     subgraph.print_neighbours(1230);
@@ -61,7 +61,7 @@ int main() {
         
     }
     */
-    cout << subgraph.boundary_vertices.size() << endl;
+    cout << subgraph.bp.size() << endl;
     //subgraph.initialise_bounding_paths(1);
 
     return 0;

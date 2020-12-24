@@ -8,8 +8,9 @@
 #include "graph.hpp"
 
 
-int N_SUBGRAPHS = 10;
-std::string SUBGRAPH_DIR = "./ny1/";
+int N_SUBGRAPHS = 10000;
+std::string SUBGRAPH_DIR = "./ny/";
+int K = 1;
 
 int main(int argc, char** argv) {
     // Initialize the MPI environment
@@ -55,7 +56,7 @@ int main(int argc, char** argv) {
         }
 
         Graph* subgraph = new Graph(edges, boundary_vertices);
-        subgraph->initialise_bounding_paths(1);
+        subgraph->initialise_bounding_paths(K);
         subgraphs.push_back(subgraph);
         infile.close();
 
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
         int n;
 
         if(pid == world_rank) {
-            n = 3*subgraphs[si]->bp.size();
+            n = 3*subgraphs[si]->lower_bounding_paths.size();
         }
 
         MPI_Bcast(&n, 1, MPI_INT, pid, MPI_COMM_WORLD);
@@ -86,7 +87,7 @@ int main(int argc, char** argv) {
         int di = 0;
         if(pid == world_rank) {
             // put data into buffer
-            for(auto path : subgraphs[si]->bp) {
+            for(auto path : subgraphs[si]->lower_bounding_paths) {
                 //if(di >= n) continue;
                 data[di++] = path.front()->id;
                 //if(di >= n) continue;
@@ -107,5 +108,4 @@ int main(int argc, char** argv) {
 
     // Finalize the MPI environment.
     MPI_Finalize();
-    
 }

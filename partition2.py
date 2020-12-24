@@ -6,7 +6,7 @@ import argparse
 import os
 import shutil
 import pprint
-
+from queue import PriorityQueue
 
 THRESHOLD = 200
 
@@ -24,7 +24,7 @@ def is_closed(node, adj_list, closed):
         if not closed[nxt]:
             return False
     return True
-
+"""
 def get_subgraph(root, adj_list, visited, closed, thres):
     subgraph = []
     boundary = []
@@ -43,14 +43,41 @@ def get_subgraph(root, adj_list, visited, closed, thres):
                 visited[nxt] = True
                 discovered.append(nxt)
     
+    visited = list(closed)
     for v in subgraph:
         if is_boundary(v, adj_list, closed):
             boundary.append(v)
-            closed[v] = False
-    
-    visited = list(closed)
+            visited[v] = False
     return subgraph, boundary
-        
+"""
+
+
+def get_subgraph(root, adj_list, visited, closed, thres, prev):
+    subgraph = list(prev)
+    sg_temp = []
+    boundary = []
+    discovered = PriorityQueue()
+    discovered.put((0, root))
+    visited[root] = True
+    while not discovered.empty():
+        dist, node = discovered.get()
+        subgraph.append(node)
+        sg_temp.append(node)
+        closed[node] = True
+        if len(subgraph) >= thres:
+            break
+        for adj in adj_list[node]:
+            nxt = adj[1]
+            if not visited[nxt]:
+                visited[nxt] = True
+                discovered.put((dist+adj[0], nxt))
+    
+    #visited = list(closed)
+    for v in sg_temp:
+        if is_boundary(v, adj_list, closed):
+            boundary.append(v)
+            #visited[v] = False
+    return subgraph, boundary
 
 if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
@@ -123,17 +150,49 @@ if __name__ == "__main__":
     boundary_vertices[root] = True
     boundaries = deque()
     boundaries.append(root)
-    
+    prev = []
     for v in range(0, n_nodes):
         if visited[v]:
             continue
-        subgraph, boundary = get_subgraph(v, adj_list, visited, closed, THRESHOLD)
+        subgraph, boundary = get_subgraph(v, adj_list, visited, closed, THRESHOLD, prev)
+        prev = list(boundary)
         subgraphs.append(subgraph)
         for bv in boundary:
             boundary_vertices[bv] = True
     
     #pp.pprint(subgraphs)
-    print("Created", len(subgraphs), "Subgraphs")
+    sgn = len(subgraphs)
+    print("Created", sgn, "Subgraphs")
+    nb1 = 0
+    nb5 = 0
+    nb10 = 0
+    nb20 = 0
+    nb50 = 0
+    mbv = 0
+    edges = 0
+    for sg in subgraphs:
+        val = 0
+        for v in sg:
+            if boundary_vertices[v]:
+                val += 1
+        #print(val)
+        mbv = max(mbv, val)
+        e = v*(val-1)/2
+        edges += e
+        if val == 1:
+            nb1 += 1
+        if val > 5:
+            nb5 += 1
+            if val > 10:
+                nb10 += 1
+                if val > 20:
+                    nb20 += 1
+                    if val > 50:
+                        nb50 += 1
+    print("Maximum boundary vertex size", mbv)
+    print("#edges in skeleton graph", edges)
+    print("1, 5, 10, 20, 50 ==> ", nb1, nb5, nb10, nb20, nb50)
+    sys.exit(0)
     #for sg in subgraphs:
     #    print(len(sg))
     fname = 0

@@ -140,8 +140,8 @@ class Graph {
     //std::unordered_map<Edge*, std::vector<std::vector<Vertex*>>> bounding_paths;
 
     // bounding paths
-    std::unordered_map<Vertex*, std::unordered_map<Vertex*, std::vector<Vertex*> > > bounding_paths;
-    std::vector<std::vector<Vertex*> > bp;
+    std::unordered_map<Vertex*, std::unordered_map<Vertex*, std::vector<std::vector<Vertex*> > > > bounding_paths;
+    std::vector<std::vector<Vertex*> > lower_bounding_paths;
 
     // default constructor
     Graph() {};
@@ -352,8 +352,9 @@ void Graph::initialise_bounding_paths(int k) {
             if(i == j) {
                 continue;
             }
-            this->bounding_paths[vertices[i]][vertices[j]] = this->get_shortest_path(vertices[i], vertices[j]);
-            this->bp.push_back(this->bounding_paths[vertices[i]][vertices[j]]);
+            //this->bounding_paths[vertices[i]][vertices[j]] = this->get_k_bounding_paths(vertices[i], vertices[j], k);
+            this->bounding_paths[vertices[i]][vertices[j]] = {this->get_shortest_path(vertices[i], vertices[j])};
+            this->lower_bounding_paths.push_back(this->bounding_paths[vertices[i]][vertices[j]][0]);
         }
     }
 }
